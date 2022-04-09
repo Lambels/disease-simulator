@@ -5,11 +5,11 @@ import "sync"
 type waiter struct {
 	wg *sync.WaitGroup
 
-	generators []func(population, chan<- [2]*patient)
+	generators []func(*population, chan<- [2]*patient)
 	processors []func(<-chan [2]*patient)
 }
 
-func (w *waiter) addGenerator(cmd func(population, chan<- [2]*patient)) {
+func (w *waiter) addGenerator(cmd func(*population, chan<- [2]*patient)) {
 	w.wg.Add(1)
 	w.generators = append(w.generators, cmd)
 }
@@ -19,10 +19,10 @@ func (w *waiter) addProcessor(cmd func(<-chan [2]*patient)) {
 	w.processors = append(w.processors, cmd)
 }
 
-func (w *waiter) start(pop population, comChan chan [2]*patient) {
+func (w *waiter) start(pop *population, comChan chan [2]*patient) {
 	// start generators.
 	for _, gen := range w.generators {
-		go func(cmd func(population, chan<- [2]*patient)) {
+		go func(cmd func(*population, chan<- [2]*patient)) {
 			cmd(pop, comChan)
 			w.wg.Done()
 		}(gen)
