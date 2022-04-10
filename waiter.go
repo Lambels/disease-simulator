@@ -3,7 +3,7 @@ package main
 import "sync"
 
 type waiter struct {
-	wg *sync.WaitGroup
+	wg sync.WaitGroup
 
 	generators []func(*population, chan<- [2]*patient)
 	processors []func(<-chan [2]*patient)
