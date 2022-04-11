@@ -23,6 +23,15 @@ func (w *waiter) addProcessor(cmd func(<-chan [2]*pacient)) {
 }
 
 func (w *waiter) start(pop *population, comChan chan [2]*pacient) {
+	// start processors.
+	for _, pro := range w.processors {
+		go func(cmd func(<-chan [2]*pacient)) {
+			cmd(comChan)
+			w.wg.Done()
+		}(pro)
+	}
+	log.Println("Processors Started.")
+
 	// start generators.
 	for _, gen := range w.generators {
 		go func(cmd func(*population, chan<- [2]*pacient)) {
@@ -31,15 +40,6 @@ func (w *waiter) start(pop *population, comChan chan [2]*pacient) {
 		}(gen)
 	}
 	log.Println("Generators Started.")
-
-	// start processors
-	for _, pro := range w.processors {
-		go func(cmd func(<-chan [2]*pacient)) {
-			cmd(comChan)
-			w.wg.Done()
-		}(pro)
-	}
-	log.Println("Processors Started.")
 }
 
 func (w *waiter) wait() {
