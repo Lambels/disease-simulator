@@ -61,11 +61,9 @@ func simulateInteraction(from <-chan [2]*pacient) {
 			return
 
 		case intercourse := <-from:
-			time.Sleep(time.Second)
 			if err := intercourse[0].interact(intercourse[1]); err != nil {
 				break
 			}
-			time.Sleep(time.Second)
 			intercourse[1].interact(intercourse[0])
 		}
 		// after each process reset the timer.
