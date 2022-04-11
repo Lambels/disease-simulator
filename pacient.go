@@ -1,12 +1,13 @@
 package main
 
 import (
+	"errors"
 	"math"
 	"math/rand"
 	"sync"
 )
 
-type patient struct {
+type pacient struct {
 	// maxInteractions is the max number of interactions the patient can have.
 	maxInteractions int
 
@@ -14,7 +15,7 @@ type patient struct {
 	interactionMu sync.Mutex
 	// interactedWith holds all the patients with which the patient has had contact
 	// with.
-	interactedWith []*patient
+	interactedWith []*pacient
 	// infected indicates if the patient is infected.
 	infected bool
 	// infectionChance is the chance that the patient gets infected.
@@ -22,9 +23,9 @@ type patient struct {
 	infectionChance float32
 }
 
-func (p *patient) interact(with *patient) {
+func (p *pacient) interact(with *pacient) error {
 	if !p.canInteract(with) {
-		return
+		return errors.New("pacient cant interact with provided pacient")
 	}
 
 	p.interactionMu.Lock()
@@ -33,24 +34,26 @@ func (p *patient) interact(with *patient) {
 
 	if with.isInfected() {
 		if p.isInfected() {
-			with.interact(p)
-			return
+			return nil
 		}
 
 		p.infect()
 	}
-
-	// call interaction with next patient, interactions go both ways.
-	with.interact(p)
+	return nil
 }
 
 // isInfected is a conccurency safe way of accessing p.interactedWith.
-func (p *patient) canInteract(with *patient) bool {
+func (p *pacient) canInteract(with *pacient) bool {
 	p.interactionMu.Lock()
 	defer p.interactionMu.Unlock()
 
+	// cant interact with self.
+	if p == with {
+		return false
+	}
+
 	// patient cant interact no more.
-	if len(p.interactedWith) > p.maxInteractions {
+	if len(p.interactedWith) > p.maxInteractions-1 {
 		return false
 	}
 
@@ -65,13 +68,13 @@ func (p *patient) canInteract(with *patient) bool {
 }
 
 // isInfected is a conccurency safe way of accessing p.infected.
-func (p *patient) isInfected() bool {
+func (p *pacient) isInfected() bool {
 	p.interactionMu.Lock()
 	defer p.interactionMu.Unlock()
 	return p.infected
 }
 
-func (p *patient) infect() {
+func (p *pacient) infect() {
 	prob := math.Floor(rand.Float64()*100) / 100
 	if float32(prob) < p.infectionChance {
 		p.interactionMu.Lock()
