@@ -21,7 +21,7 @@ var (
 // generate generates 2 random pacients from population field: from.
 //
 // safe to use concurrently as pacients are thread safe.
-func generate(from *population, to chan<- [2]*patient) {
+func generate(from *population, to chan<- [2]*pacient) {
 	for {
 		// find suitable first pacient.
 		pat1, key := from.Random()
@@ -45,14 +45,14 @@ func generate(from *population, to chan<- [2]*patient) {
 			}
 		}
 
-		to <- [2]*patient{pat1, pat2}
+		to <- [2]*pacient{pat1, pat2}
 	}
 
 }
 
 // simulateInteraction processes interactions from (from).
 // run in own gorutine.
-func simulateInteraction(from <-chan [2]*patient) {
+func simulateInteraction(from <-chan [2]*pacient) {
 	timer := time.NewTimer(time.Duration(*processProcessorTimeoutFlag) * time.Second)
 	for {
 		select {
@@ -98,7 +98,7 @@ func main() {
 	}
 
 	// start simulation.
-	wait.start(pop, make(chan [2]*patient))
+	wait.start(pop, make(chan [2]*pacient))
 
 	// wait for simulation to end.
 	wait.wait()

@@ -11,8 +11,8 @@ type population struct {
 
 	// both clean and dirty stores store the same pointers to patients initially,
 	// but the clean store doesent change its content.
-	cleanStore map[int]*patient
-	dirtyStore map[int]*patient
+	cleanStore map[int]*pacient
+	dirtyStore map[int]*pacient
 
 	// keys is a slice of the keys in the dirty store used to provide the random behaviour.
 	keys []int
@@ -28,12 +28,12 @@ func NewPopulation(len, infected, maxInteractions int, rate float32) *population
 	}
 
 	// init population.
-	clean := make(map[int]*patient, len)
-	dirty := make(map[int]*patient, len)
+	clean := make(map[int]*pacient, len)
+	dirty := make(map[int]*pacient, len)
 	keys := make([]int, len)
 	keyIndexMap := make(map[int]int, len)
 	for i := 0; i < len; i++ {
-		pat := &patient{
+		pat := &pacient{
 			maxInteractions: maxInteractions,
 			infectionChance: rate,
 		}
@@ -73,7 +73,7 @@ func (p *population) infectRandom() {
 }
 
 // RandomTwo returns 2 random pacients from the population.
-func (p *population) Random() (*patient, int) {
+func (p *population) Random() (*pacient, int) {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
 
