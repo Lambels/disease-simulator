@@ -1,9 +1,10 @@
 package main
 
 import (
-	"log"
 	"math/rand"
 	"sync"
+
+	"github.com/rodaine/table"
 )
 
 type population struct {
@@ -20,6 +21,8 @@ type population struct {
 	// keyIndexMap used when removing an item from dirtyStore we can also quickly remove
 	// it from keys slice above providing an O(1) complexity.
 	keyIndexMap map[int]int
+
+	maxInteractions int
 }
 
 func NewPopulation(len, infected, maxInteractions int, rate float32) *population {
@@ -44,10 +47,11 @@ func NewPopulation(len, infected, maxInteractions int, rate float32) *population
 	}
 
 	pop := &population{
-		cleanStore:  clean,
-		dirtyStore:  dirty,
-		keys:        keys,
-		keyIndexMap: keyIndexMap,
+		cleanStore:      clean,
+		dirtyStore:      dirty,
+		keys:            keys,
+		keyIndexMap:     keyIndexMap,
+		maxInteractions: maxInteractions,
 	}
 
 	// infect random patients.
@@ -77,7 +81,7 @@ func (p *population) Random() (*pacient, int) {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
 
-	if len(p.dirtyStore) == 0 {
+	if len(p.dirtyStore) <= p.maxInteractions {
 		return nil, -1
 	}
 
@@ -113,10 +117,34 @@ func (p *population) RemoveKey(key int) {
 	delete(p.dirtyStore, key)
 }
 
-func (p *population) Print() {
+func (p *population) Analytics(infected int) {
 	p.mu.RLock()
-	for k, v := range p.cleanStore {
-		log.Println("Pacient:", k, "Infected:", v.isInfected())
+	defer p.mu.RUnlock()
+	lenClean := len(p.cleanStore)
+	lenDirty := len(p.dirtyStore)
+
+	tbl := table.New("Total", "Uninfected", "Infected", "Procentage")
+	widgets := []interface{}{}
+
+	widgets = append(widgets, lenClean)
+	if lenDirty == lenClean {
+		// before simulation.
+		widgets = append(widgets, lenClean-infected)
+		widgets = append(widgets, infected)
+		widgets = append(widgets, (infected/lenClean)*100)
+	} else {
+		// after simulation.
+		var infectionCount int
+		for _, pat := range p.cleanStore {
+			if pat.isInfected() {
+				infectionCount++
+			}
+		}
+
+		widgets = append(widgets, lenClean-infectionCount)
+		widgets = append(widgets, infectionCount)
+		widgets = append(widgets, (infectionCount/lenClean)*100)
 	}
-	p.mu.RUnlock()
+	tbl.AddRow(widgets...)
+	tbl.Print()
 }
