@@ -25,6 +25,9 @@ func generate(from *population, to chan<- [2]*pacient) {
 	for {
 		// find suitable first pacient.
 		pat1, key := from.Random()
+		if pat1 == nil {
+			return
+		}
 		for !pat1.canInteract(nil) {
 			from.RemoveKey(key)
 			pat1, key = from.Random()
@@ -36,6 +39,9 @@ func generate(from *population, to chan<- [2]*pacient) {
 
 		// find suitable second pacient.
 		pat2, key := from.Random()
+		if pat2 == nil {
+			return
+		}
 		for !pat2.canInteract(nil) {
 			from.RemoveKey(key)
 			pat2, key = from.Random()
@@ -83,7 +89,7 @@ func main() {
 	)
 
 	log.Println("BEFORE ------------------------")
-	pop.Print()
+	pop.Analytics(*popInfectedFlag)
 
 	wait := &waiter{}
 	// add generators.
@@ -102,5 +108,5 @@ func main() {
 	wait.wait()
 
 	log.Println("AFTER ------------------------")
-	pop.Print()
+	pop.Analytics(*popInfectedFlag)
 }
