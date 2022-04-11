@@ -77,7 +77,7 @@ func (p *population) Random() (*patient, int) {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
 
-	if len(p.dirtyStore) < 2 {
+	if len(p.dirtyStore) == 0 {
 		return nil, -1
 	}
 
